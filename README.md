@@ -1,4 +1,6 @@
-# FinanceBro
+# FinanceBro 
+
+<img width="640" height="640" alt="image" src="https://github.com/user-attachments/assets/96fde878-88e1-4e07-84eb-56954c32a65f" />
 
 Bot do Telegram para controle financeiro pessoal. Envie uma mensagem descrevendo um gasto ou receita e o bot extrai os dados automaticamente com IA e salva na sua planilha do Google Sheets.
 
