@@ -1,0 +1,6 @@
+.env
+credentials.json
+
+.financebro/
+__pycache__/
+*.pyc
