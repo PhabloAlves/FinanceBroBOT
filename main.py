@@ -1,4 +1,3 @@
-import asyncio
 from fastapi import FastAPI
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.telegram import send_message
@@ -10,8 +9,8 @@ app = FastAPI()
 app.include_router(router, prefix="/api/v1")
 
 async def daily_job():
-    summary = get_daily_summary()
-    await send_message(summary),
+    summary = await get_daily_summary()
+    await send_message(summary)
 
 scheduler = AsyncIOScheduler(timezone="America/Sao_Paulo")
 scheduler.add_job(daily_job, "cron", hour=23, minute=59)

@@ -9,7 +9,7 @@ load_dotenv()
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-def process_message(user_text, tipo: str = None):
+async def process_message(user_text, tipo: str = None):
     hoje = datetime.now().strftime("%d/%m/%Y")
 
     tipo_instrucao = f" O tipo já foi definido pelo usuário como '{tipo}', não precisa identificar." if tipo else " Identifique se é despesa ou receita."
@@ -19,7 +19,7 @@ def process_message(user_text, tipo: str = None):
         response_mime_type="application/json",
     )
 
-    response = client.models.generate_content(
+    response = await client.aio.models.generate_content(
         model="models/gemini-2.5-flash",
         contents=f"Data de hoje: {hoje}\nMensagem: {user_text}",
         config=config
@@ -31,4 +31,3 @@ def process_message(user_text, tipo: str = None):
         result["tipo"] = tipo
 
     return result
-
