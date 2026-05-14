@@ -9,19 +9,26 @@ load_dotenv()
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-def process_message(user_text):
-    hoje = datetime.now().strftime("%d/%m/%y")
+def process_message(user_text, tipo: str = None):
+    hoje = datetime.now().strftime("%d/%m/%Y")
+
+    tipo_instrucao = f" O tipo já foi definido pelo usuário como '{tipo}', não precisa identificar." if tipo else " Identifique se é despesa ou receita."
 
     config = types.GenerateContentConfig(
-        system_instruction = f"Você trabalha para um sistema de finanças pessoas, preciso que identifique e separe a mensagem em categoria, tipo(despesa, receita), descrição, data de hoje, valor, forma de pagamento(crédito, pix).",
-        response_mime_type = "application/json",
-    ) 
-
-    response = client.models.generate_content(
-        model = "models/gemini-2.5-flash",
-        contents = f"Data de hoje: {hoje}\nMensagem: {user_text}",
-        config = config
+        system_instruction=f"Você trabalha para um sistema de finanças pessoais. Extraia da mensagem: categoria, tipo (despesa ou receita), descrição, data, valor e forma de pagamento (crédito, pix, débito, dinheiro).{tipo_instrucao}",
+        response_mime_type="application/json",
     )
 
-    return json.loads(response.text)
+    response = client.models.generate_content(
+        model="models/gemini-2.5-flash",
+        contents=f"Data de hoje: {hoje}\nMensagem: {user_text}",
+        config=config
+    )
+
+    result = json.loads(response.text)
+
+    if tipo:
+        result["tipo"] = tipo
+
+    return result
 
