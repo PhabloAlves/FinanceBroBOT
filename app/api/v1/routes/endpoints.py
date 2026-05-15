@@ -1,7 +1,13 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Header
 from app.services.ai_handler import process_message
 from app.services.finance_db import save_transaction, set_renda, clear_data, get_resume, user_exists, create_user
 from app.services.telegram import send_message
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+WEBHOOK_SECRET = os.environ.get("TELEGRAM_WEBHOOK_SECRET")
 
 router = APIRouter()
 
@@ -27,7 +33,10 @@ ONBOARDING = (
 )
 
 @router.post("/webhook")
-async def telegram_webhook(request: Request):
+async def telegram_webhook(request: Request, x_telegram_bot_api_secret_token: str = Header(default=None)):
+    if WEBHOOK_SECRET and x_telegram_bot_api_secret_token != WEBHOOK_SECRET:
+        return {"ok": False}
+
     data = await request.json()
     message = data.get("message", {})
     text = message.get("text", "") or ""
@@ -52,6 +61,9 @@ async def telegram_webhook(request: Request):
             await send_message(chat_id, f"❌ Use: /{tipo} descrição valor forma_pagamento")
             return {"ok": True}
         result = await process_message(descricao, tipo=tipo)
+        if not result:
+            await send_message(chat_id, "❌ Não consegui entender a mensagem. Tente novamente.")
+            return {"ok": True}
         await save_transaction(result, user_id)
         emoji = "🔴" if tipo == "despesa" else "🟢"
         await send_message(chat_id, f"{emoji} Salvo: {result.get('descricao')} | {result.get('categoria')} | R$ {result.get('valor')} | {result.get('forma_pagamento')}")
@@ -61,8 +73,15 @@ async def telegram_webhook(request: Request):
         if len(partes) < 2:
             await send_message(chat_id, "❌ Use: /setrenda 3000")
             return {"ok": True}
-        await set_renda(partes[1], user_id)
-        await send_message(chat_id, f"✅ Renda mensal definida: R$ {partes[1]}")
+        try:
+            valor = float(partes[1].replace(",", "."))
+            if valor <= 0:
+                raise ValueError
+        except ValueError:
+            await send_message(chat_id, "❌ Valor inválido. Use um número positivo. Ex: /setrenda 3000")
+            return {"ok": True}
+        await set_renda(valor, user_id)
+        await send_message(chat_id, f"✅ Renda mensal definida: R$ {valor:.2f}")
 
     elif text == "/resumo":
         await send_message(chat_id, await get_resume(user_id))

@@ -25,7 +25,10 @@ async def process_message(user_text, tipo: str = None):
         config=config
     )
 
-    result = json.loads(response.text)
+    try:
+        result = json.loads(response.text)
+    except (json.JSONDecodeError, TypeError):
+        return None
 
     if tipo:
         result["tipo"] = tipo

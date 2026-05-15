@@ -89,6 +89,7 @@ async def get_resume(user_id: int) -> str:
     ultimo_dia_num = calendar.monthrange(hoje.year, hoje.month)[1]
     dias_restantes = (hoje.replace(day=ultimo_dia_num) - hoje).days + 1
     sugestao_diaria = saldo_atual / dias_restantes if dias_restantes > 0 else 0
+    sugestao_diaria = sugestao_diaria if sugestao_diaria >= 0 else 0
 
     linhas = [f"📊 Resumo de {mes_atual}\n"]
     linhas.append(f"💰 Renda mensal: R$ {renda:.2f}")
