@@ -1,4 +1,4 @@
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, exists
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.db.database import AsyncSessionLocal
 from app.db.models import User, MonthlyIncome, Transaction
@@ -6,15 +6,24 @@ from datetime import datetime
 import calendar
 
 
-async def _ensure_user(session, user_id: int):
-    await session.execute(
-        pg_insert(User).values(telegram_user_id=user_id).on_conflict_do_nothing()
-    )
+async def user_exists(user_id: int) -> bool:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(exists().where(User.telegram_user_id == user_id)))
+        return result.scalar()
+
+
+async def create_user(user_id: int):
+    async with AsyncSessionLocal() as session:
+        await session.execute(
+            pg_insert(User).values(telegram_user_id=user_id).on_conflict_do_nothing()
+        )
+        await session.commit()
 
 
 async def save_transaction(data: dict, user_id: int):
     async with AsyncSessionLocal() as session:
-        await _ensure_user(session, user_id)
+        if not await user_exists(user_id):
+            await create_user(user_id)
         session.add(Transaction(
             telegram_user_id=user_id,
             data=data.get("data"),
@@ -31,7 +40,8 @@ async def save_transaction(data: dict, user_id: int):
 async def set_renda(monthly_income, user_id: int):
     mes_atual = datetime.now().strftime("%m/%Y")
     async with AsyncSessionLocal() as session:
-        await _ensure_user(session, user_id)
+        if not await user_exists(user_id):
+            await create_user(user_id)
         await session.execute(
             pg_insert(MonthlyIncome)
             .values(telegram_user_id=user_id, month=mes_atual, amount=float(monthly_income))

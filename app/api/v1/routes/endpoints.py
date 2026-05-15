@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from app.services.ai_handler import process_message
-from app.services.finance_db import save_transaction, set_renda, clear_data, get_resume
+from app.services.finance_db import save_transaction, set_renda, clear_data, get_resume, user_exists, create_user
 from app.services.telegram import send_message
 
 router = APIRouter()
@@ -15,6 +15,17 @@ COMMANDS = (
     "/ajuda — exibe este menu"
 )
 
+ONBOARDING = (
+    "👋 Bem-vindo ao FinanceBro!\n\n"
+    "Eu vou te ajudar a controlar suas finanças pelo Telegram.\n\n"
+    "📌 Para começar, defina sua renda mensal:\n"
+    "/setrenda 3000\n\n"
+    "Depois é só registrar seus gastos e receitas:\n"
+    "/despesa lanche ifood 50 pix\n"
+    "/receita salário 3000 transferencia\n\n"
+    "Digite /ajuda para ver todos os comandos."
+)
+
 @router.post("/webhook")
 async def telegram_webhook(request: Request):
     data = await request.json()
@@ -23,7 +34,15 @@ async def telegram_webhook(request: Request):
     user_id = message.get("from", {}).get("id")
     chat_id = message.get("chat", {}).get("id")
 
-    if not text.startswith("/") or not user_id:
+    if not user_id:
+        return {"ok": True}
+
+    if not await user_exists(user_id):
+        await create_user(user_id)
+        await send_message(chat_id, ONBOARDING)
+        return {"ok": True}
+
+    if not text.startswith("/"):
         return {"ok": True}
 
     if text.startswith("/despesa") or text.startswith("/receita"):
