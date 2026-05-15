@@ -2,8 +2,7 @@
 
 <img width="640" height="640" alt="image" src="https://github.com/user-attachments/assets/96fde878-88e1-4e07-84eb-56954c32a65f" />
 
-Bot do Telegram para controle financeiro pessoal. Envie uma mensagem descrevendo um gasto ou receita e o bot extrai os dados automaticamente com IA e salva na sua planilha do Google Sheets.
-
+Bot do Telegram para controle financeiro pessoal. Envie uma mensagem descrevendo um gasto ou receita e o bot extrai os dados automaticamente com IA e salva.
 ## Como funciona
 
 1. Você envia uma mensagem pro bot: _"gastei 50 reais no mercado no pix"_
@@ -15,6 +14,6 @@ Bot do Telegram para controle financeiro pessoal. Envie uma mensagem descrevendo
 
 - **FastAPI** — servidor web e webhook
 - **Google Gemini** — extração de dados das mensagens
-- **Google Sheets** — armazenamento dos lançamentos
+- **Supabase** — armazenamento dos lançamentos
 - **APScheduler** — agendamento do resumo diário
 - **ngrok** — exposição local para o webhook (desenvolvimento)
