@@ -1,5 +1,4 @@
-from google import genai
-from google.genai import types
+from groq import AsyncGroq
 from dotenv import load_dotenv
 from datetime import datetime
 import os
@@ -7,27 +6,32 @@ import json
 
 load_dotenv()
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+client = AsyncGroq(api_key=os.environ.get("GROQ_API_KEY"))
 
 async def process_message(user_text, tipo: str = None):
     hoje = datetime.now().strftime("%d/%m/%Y")
 
     tipo_instrucao = f" O tipo já foi definido pelo usuário como '{tipo}', não precisa identificar." if tipo else " Identifique se é despesa ou receita."
 
-    config = types.GenerateContentConfig(
-        system_instruction=f"Você trabalha para um sistema de finanças pessoais. Extraia da mensagem: categoria, tipo (despesa ou receita), descrição, data, valor e forma de pagamento (crédito, pix, débito, dinheiro).{tipo_instrucao}",
-        response_mime_type="application/json",
+    system_instruction = (
+        "Você trabalha para um sistema de finanças pessoais. Extraia da mensagem: "
+        "categoria, tipo (despesa ou receita), descrição, data, valor e forma de pagamento "
+        f"(crédito, pix, débito, dinheiro).{tipo_instrucao} "
+        "Responda apenas com um objeto JSON."
     )
 
-    response = await client.aio.models.generate_content(
-        model="models/gemini-2.5-flash",
-        contents=f"Data de hoje: {hoje}\nMensagem: {user_text}",
-        config=config
+    response = await client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": system_instruction},
+            {"role": "user", "content": f"Data de hoje: {hoje}\nMensagem: {user_text}"},
+        ],
+        response_format={"type": "json_object"},
     )
 
     try:
-        result = json.loads(response.text)
-    except (json.JSONDecodeError, TypeError):
+        result = json.loads(response.choices[0].message.content)
+    except (json.JSONDecodeError, TypeError, IndexError):
         return None
 
     if tipo:
