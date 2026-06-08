@@ -11,14 +11,14 @@ O bot está disponível no Telegram: [@SchokFinanceBot](https://t.me/SchokFinanc
 ## Como funciona
 
 1. Você envia uma mensagem pro bot: _"gastei 50 reais no mercado no pix"_
-2. A IA (Gemini) identifica categoria, tipo, valor e forma de pagamento
+2. A IA (Groq) identifica categoria, tipo, valor e forma de pagamento
 3. Os dados são salvos automaticamente no banco de dados
 4. Todo dia às 23:59 você recebe um resumo do dia e do mês pelo Telegram
 
 ## Tecnologias
 
 - **FastAPI** — servidor web e webhook
-- **Google Gemini** — extração de dados das mensagens
+- **Groq (Llama 3.3)** — extração de dados das mensagens
 - **Supabase** — banco de dados para armazenamento dos lançamentos
 - **APScheduler** — agendamento do resumo diário
 - **Render** — hospedagem da API em produção
